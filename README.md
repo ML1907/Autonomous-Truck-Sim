@@ -10,10 +10,16 @@ Author: Erik Börve, borerik@chalmers.se
 
  ### Prerequisites
 
- Clone the project in your local machine.
-
-Locate the repo and run:
-* pip
+ Clone the project in your local machine:
+  ```sh
+  git clone <repository cloning url>
+  ```
+ The environment is created for python 3.9.10. Using conda this can be set as:
+  ```sh
+ conda create --name Autonomous-Truck-Sim python=3.9.10 -y
+ source activate Autonomous-Truck-Sim
+  ```
+Finally, install dependencies:
   ```sh
   pip install -r requirements.txt
   ```
