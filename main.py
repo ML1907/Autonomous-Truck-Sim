@@ -13,14 +13,14 @@ from templateRLagent import RLAgent
 
 # Set Gif-generation
 makeMovie = True
-directory = r"C:\Phd\Student_Projects\GNN_RL_EPFL\Autonomous-Truck-Sim\simRes.gif"
+directory = r"C:\Phd\Student_Projects\EcoPilot_Bsc\Autonomous-Truck-Sim\simRes.gif"
 
 # System initialization 
 dt = 0.2                    # Simulation time step (Impacts traffic model accuracy)
-f_controller = 5            # Controller update frequency, i.e updates at each t = dt*f_controller
-N =  12                     # MPC Horizon length
+f_controller = 1            # Controller update frequency, i.e updates at each t = dt*f_controller
+N =  30                     # MPC Horizon length
 
-ref_vx = 60/3.6             # Higway speed limit in (m/s)
+ref_vx = 70/3.6             # Higway speed limit in (m/s)
 
 # -------------------------- Initilize RL agent object ----------------------------------
 # The agent is feed to the decision maker, changing names requries changing troughout code base
@@ -47,25 +47,23 @@ vehicleADV.costf(Q_ADV)
 L_ADV,Lf_ADV = vehicleADV.getCost()
 
 # ------------------ Problem definition ---------------------
-scenarioTrailADV = trailing(vehicleADV,N,lanes = 3)
-scenarioADV = simpleOvertake(vehicleADV,N,lanes = 3)
+scenarioTrailADV = trailing(vehicleADV,N,lanes = 3,v_legal = ref_vx)
+scenarioADV = simpleOvertake(vehicleADV,N,lanes = 3,v_legal = ref_vx)
 roadMin, roadMax, laneCenters = scenarioADV.getRoad()
     
 # -------------------- Traffic Set up -----------------------
 # * Be carful not to initilize an unfeasible scenario where a collsion can not be avoided
 # # Initilize ego vehicle
-vx_init_ego = 55/3.6                                # Initial velocity of the ego vehicle
+vx_init_ego = 50/3.6                                # Initial velocity of the ego vehicle
 vehicleADV.setInit([0,laneCenters[0]],vx_init_ego)
 
 # # Initilize surrounding traffic
 # Lanes [0,1,2] = [Middle,left,right]
-vx_ref_init = 50/3.6                     # (m/s)
-advVeh1 = vehicleSUMO(dt,N,[30,laneCenters[1]],[0.9*vx_ref_init,0],type = "normal")
-advVeh2 = vehicleSUMO(dt,N,[45,laneCenters[0]],[0.8*vx_ref_init,0],type = "passive")
-advVeh3 = vehicleSUMO(dt,N,[100,laneCenters[2]],[0.85*vx_ref_init,0],type = "normal")
-advVeh4 = vehicleSUMO(dt,N,[-20,laneCenters[1]],[1.2*vx_ref_init,0],type = "aggressive")
-advVeh5 = vehicleSUMO(dt,N,[40,laneCenters[2]],[1.2*vx_ref_init,0],type = "aggressive")
-
+advVeh1 = vehicleSUMO(dt,N,[30,laneCenters[1]],[0.75*ref_vx,0],type = "normal")
+advVeh2 = vehicleSUMO(dt,N,[40,laneCenters[0]],[0.7*ref_vx,0],type = "passive")
+advVeh3 = vehicleSUMO(dt,N,[100,laneCenters[2]],[0.65*ref_vx,0],type = "normal")
+advVeh4 = vehicleSUMO(dt,N,[-20,laneCenters[1]],[1*ref_vx,0],type = "aggressive")
+advVeh5 = vehicleSUMO(dt,N,[60,laneCenters[2]],[1*ref_vx,0],type = "aggressive")
 
 # # Combine choosen vehicles in list
 vehList = [advVeh1,advVeh2,advVeh3,advVeh4,advVeh5]
@@ -114,7 +112,7 @@ decisionMaster.setDecisionCost(q_ADV_decision)                  # Sets cost of c
 # # -----------------------------------------------------------------
 # # -----------------------------------------------------------------
 
-tsim = 200                         # Total simulation time in seconds
+tsim = 20                         # Total simulation time in seconds
 Nsim = int(tsim/dt)
 tspan = np.linspace(0,tsim,Nsim)
 
@@ -124,7 +122,7 @@ x_iter[:],u_iter = vehicleADV.getInit()
 vehicleADV.update(x_iter,u_iter)
 
 refxADV = [0,laneCenters[1],ref_vx,0,0]
-refxT_in, refxL_in, refxR_in = vehicleADV.setReferences(laneCenters)
+refxT_in, refxL_in, refxR_in = vehicleADV.setReferences(laneCenters,ref_vx)
 
 refu_in = [0,0,0]
 refxT_out,refu_out = scenarioADV.getReference(refxT_in,refu_in)

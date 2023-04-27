@@ -107,6 +107,14 @@ def borvePictures(X,X_traffic,X_traffic_ref,vehList,X_pred,vehicle,scenario,traf
                                 facecolor=color, fill=True))
                 plt.scatter(X_traffic_ref[0,i,j],X_traffic_ref[1,i,j],marker = '.',color = color)
 
+                # Plot box with info
+            props = dict(boxstyle='round', facecolor='lightgray', alpha=0.5)
+            # textstr = "Velocity: " + str(np.round(X[2,i,0])*3.6) + " (km/h) \n" + str(i) 
+            textstr = "Velocity: " + '{:.2f}'.format(round(X[2,i,0]*3.6, 2)) + " (km/h)" 
+            # place a text box in upper left in axes coords
+            axanime.text(0.05, 0.95, textstr, transform=axanime.transAxes, fontsize=12,
+                verticalalignment='top', bbox=props)
+
             plt.axis('equal')
             plt.xlim(X[0,i,0]-frameSize, X[0,i,0]+frameSize)
             plt.ylim([roadMin-2, roadMax+2])

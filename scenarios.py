@@ -8,7 +8,7 @@ class trailing:
     '''
     The ego vehicle keeps lane and adapts to leadning vehicle speed
     '''
-    def __init__(self,vehicle,N,min_distx = 5, lanes = 3, laneWidth = 6.5):
+    def __init__(self,vehicle,N,min_distx = 5, lanes = 3, laneWidth = 6.5,v_legal = 60/3.6):
         self.name = 'trailing'
         self.N = N
         self.vehicle = vehicle
@@ -19,7 +19,7 @@ class trailing:
         self.lanes = lanes
         self.laneWidth = laneWidth
 
-        self.vmax = (60+5)/3.6
+        self.vmax = v_legal+5/3.6
 
         self.Time_headway = 0.5
 
@@ -50,7 +50,7 @@ class trailing:
             v0_idx = traffic.getVehicles()[idx[0]].v0
             dist_t = v0_idx * self.Time_headway
 
-        safeDist = self.min_distx + leadLength/2 + self.L_tract + dist_t
+        safeDist = self.min_distx + leadLength/2 + self.L_tract
         return Function('S',[self.p],[self.p-safeDist],['p'],['D_min'])
 
     def getRoad(self):
@@ -93,7 +93,7 @@ class simpleOvertake:
     '''
     The ego vehicle overtakes the lead vehicle
     '''
-    def __init__(self,vehicle,N, min_distx = 5, lanes = 3, laneWidth = 6.5):
+    def __init__(self,vehicle,N, min_distx = 5, lanes = 3, laneWidth = 6.5,v_legal = 60/3.6):
         self.name = 'simpleOvertake'
         self.N = N
         self.nx,self.nu,_,_ = vehicle.getSystemDim()
@@ -102,7 +102,7 @@ class simpleOvertake:
         self.lanes = lanes
         self.laneWidth = laneWidth
 
-        self.vmax = (60+5)/3.6
+        self.vmax = v_legal+5/3.6
 
         self.Time_headway = 0.5
 

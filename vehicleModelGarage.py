@@ -152,11 +152,15 @@ class vehBicycleKinematic:
     def getInit(self):
         return self.x_init,self.u_init
 
-    def setReferences(self,laneCenters):
+    def setReferences(self,laneCenters,vx):
         self.laneCenters = laneCenters
         self.refxT[1] = self.laneCenters[0]
         self.refxL[1] = self.laneCenters[1]
         self.refxR[1] = self.laneCenters[2]
+
+        self.refxT[2] = vx
+        self.refxL[2] = vx
+        self.refxR[2] = vx
 
         return self.refxT, self.refxL, self.refxR
     
