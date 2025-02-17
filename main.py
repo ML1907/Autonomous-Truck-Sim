@@ -13,7 +13,7 @@ from templateRLagent import RLAgent
 
 # Set Gif-generation
 makeMovie = True
-directory = r"C:\Phd\Student_Projects\EcoPilot_Bsc\Autonomous-Truck-Sim\simRes.gif"
+directory = r"C:\Users\A521105\Desktop\Volvo\simRes.gif"
 
 # System initialization 
 dt = 0.2                    # Simulation time step (Impacts traffic model accuracy)
@@ -38,7 +38,7 @@ vehicleADV.integrator(int_opt,dt)
 F_x_ADV  = vehicleADV.getIntegrator()
 
 # Set Cost parameters
-Q_ADV = [0,40,3e2,5,5]                            # State cost, Entries in diagonal matrix
+Q_ADV = [0,40,3e2,5,5]                           # State cost, Entries in diagonal matrix
 R_ADV = [5,5]                                    # Input cost, Entries in diagonal matrix
 q_ADV_decision = 50
 
@@ -55,22 +55,23 @@ roadMin, roadMax, laneCenters = scenarioADV.getRoad()
 # * Be carful not to initilize an unfeasible scenario where a collsion can not be avoided
 # # Initilize ego vehicle
 vx_init_ego = 50/3.6                                # Initial velocity of the ego vehicle
+disable_ego_interaction = True                      # Set to True to IGNORE ego vehicle (agents)
 vehicleADV.setInit([0,laneCenters[0]],vx_init_ego)
 
 # # Initilize surrounding traffic
 # Lanes [0,1,2] = [Middle,left,right]
-advVeh1 = vehicleSUMO(dt,N,[30,laneCenters[1]],[0.75*ref_vx,0],type = "normal")
-advVeh2 = vehicleSUMO(dt,N,[40,laneCenters[0]],[0.7*ref_vx,0],type = "passive")
-advVeh3 = vehicleSUMO(dt,N,[100,laneCenters[2]],[0.65*ref_vx,0],type = "normal")
-advVeh4 = vehicleSUMO(dt,N,[-20,laneCenters[1]],[1*ref_vx,0],type = "aggressive")
-advVeh5 = vehicleSUMO(dt,N,[60,laneCenters[2]],[1*ref_vx,0],type = "aggressive")
+advVeh1 = vehicleSUMO(dt,N,[30,laneCenters[1]],[0.75*ref_vx,0],type = "normal",disable_ego_interaction=disable_ego_interaction)
+advVeh2 = vehicleSUMO(dt,N,[40,laneCenters[0]],[0.7*ref_vx,0],type = "normal",disable_ego_interaction=disable_ego_interaction)
+advVeh3 = vehicleSUMO(dt,N,[100,laneCenters[2]],[0.65*ref_vx,0],type = "passive",disable_ego_interaction=disable_ego_interaction)
+advVeh4 = vehicleSUMO(dt,N,[-20,laneCenters[1]],[1*ref_vx,0],type = "aggressive",disable_ego_interaction=disable_ego_interaction)
+advVeh5 = vehicleSUMO(dt,N,[60,laneCenters[2]],[1*ref_vx,0],type = "aggressive",disable_ego_interaction=disable_ego_interaction)
 
 # # Combine choosen vehicles in list
 vehList = [advVeh1,advVeh2,advVeh3,advVeh4,advVeh5]
 
 # # Define traffic object
 leadWidth, leadLength = advVeh1.getSize()
-traffic = combinedTraffic(vehList,vehicleADV,N,f_controller)
+traffic = combinedTraffic(vehList,vehicleADV,N,f_controller,respawnPos=99999,respawnTol=99999)   # big respawn to avoid it.
 traffic.setScenario(scenarioADV)
 Nveh = traffic.getDim()
 
@@ -169,7 +170,7 @@ for i in range(0,Nsim):
         refxL_out,refxR_out,refxT_out = decisionMaster.updateReference()
 
         # Compute optimal control action
-        x_test,u_test,X_out = decisionMaster.chooseController()
+        x_test,u_test,X_out = decisionMaster.chooseController()  #Executes the optimization. Waits to finish and then move on.
         u_iter = u_test[:,0]
 
     # Update traffic and store data

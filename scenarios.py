@@ -6,7 +6,7 @@ from helpers import *
 
 class trailing:
     '''
-    The ego vehicle keeps lane and adapts to leadning vehicle speed
+    The ego vehicle keeps lane and adapts to leading vehicle speed. Sets longitudinal mpc constraints.
     '''
     def __init__(self,vehicle,N,min_distx = 5, lanes = 3, laneWidth = 6.5,v_legal = 60/3.6):
         self.name = 'trailing'
@@ -23,10 +23,10 @@ class trailing:
 
         self.Time_headway = 0.5
 
-        self.min_distx = min_distx
-        self.p = MX.sym('p',1,N+1)
+        self.min_distx = min_distx   # Minimum longitudinal safety distance
+        self.p = MX.sym('p',1,N+1)   # Symbolic x position variable to define safety distance over MPC horizon
 
-        self.egoPx = []
+        self.egoPx = []              # real time x position of ego vehicle
         self.egoPy = []
 
     def getReference(self,refx,refu):
@@ -42,6 +42,7 @@ class trailing:
         return refx_out, refu_out
 
     def constraint(self,traffic,opts):
+        '''Computes the safety distance constraint based on lead vehicle.'''
         leadWidth, leadLength = traffic.getVehicles()[0].getSize()
         idx = self.getLeadVehicle(traffic)
         if len(idx) == 0:
@@ -61,6 +62,7 @@ class trailing:
         return roadMin, roadMax, laneCenters
 
     def setEgoLane(self):
+        '''Determines the ego vehicle's lane based on its current Y-position.'''
         x = self.vehicle.getPosition()
         self.egoPx = x[0]
         self.egoPy = x[1]
@@ -75,6 +77,7 @@ class trailing:
         return self.egoLane
     
     def getLeadVehicle(self,traffic):
+        '''Finds the closest vehicle ahead in the same lane.'''
         self.setEgoLane()
         reldistance = 10000             # A large number
         leadInLane = []
@@ -111,13 +114,13 @@ class simpleOvertake:
         
         # Safety constraint definitions
         self.min_distx = min_distx
-        self.pxL = MX.sym('pxL',1,N+1)
-        self.px = MX.sym('x',1,N+1)
+        self.pxL = MX.sym('pxL',1,N+1)    # ego vehicle's predicted X-position specifically during a lane-change maneuver
+        self.px = MX.sym('x',1,N+1)       # ego vehicle's predicted X-position along the road throughout the prediction horizon
 
-        self.traffic_x = MX.sym('x',1,N+1)
+        self.traffic_x = MX.sym('x',1,N+1)  #Predicted x position of surrounding vehicles over the entire prediction horizon N
         self.traffic_y = MX.sym('y',1,N+1)
-        self.traffic_sign = MX.sym('sign',1,N+1)
-        self.traffic_shift = MX.sym('shift',1,N+1)
+        self.traffic_sign = MX.sym('sign',1,N+1)   # Encodes the direction (+1 for right, -1 for left) of the lane shift
+        self.traffic_shift = MX.sym('shift',1,N+1)  # Represents the lateral displacement (y-offset) to reach the target lane
 
 
     def getReference(self,refx,refu):

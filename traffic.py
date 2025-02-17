@@ -103,7 +103,7 @@ class vehicleSUMO:
     A relistic traffic simulator
     IDM for acceleration, MOBIL for lane change and PI controller for steering angle
     """
-    def __init__(self,dt,N,p0,v0,width = 2.032, length = 4.78536, type = "normal"):
+    def __init__(self,dt,N,p0,v0,width = 2.032, length = 4.78536, type = "normal", disable_ego_interaction=False):
         """
         type - setting for vehicle behavoir 
             normal : Close to speed limit, considers other vehicles
@@ -119,6 +119,7 @@ class vehicleSUMO:
         self.width = width
         self.length = length
         self.nx = 4
+        self.disable_ego_interaction = disable_ego_interaction
 
         self.p = self.p0
         self.v = self.v0_x
@@ -257,10 +258,10 @@ class vehicleSUMO:
         return dX
 
     def getVeh(self,vehicles,egoVehicle,lane,d,type):
-        # Calculates speed.position and acceleration of closest vehicle in lane
-        # Either for leading or trailing vehicle 
-        # type = {"lead", "trail"}
-
+        """
+        Finds the closest vehicle ahead or behind in a lane. Calculates speed,position and acceleration
+        - If disable_ego_interaction is True, ignores ego vehicle even if it exists.
+        """
         # Initialize with same v as ego and "infinitly" far away from current vehicle
         x_veh = self.getState()
         if type == "lead":
@@ -286,22 +287,23 @@ class vehicleSUMO:
                         x_veh = state_i
                         u_veh = vehicle.getControl()
 
-        # Check ego vehicle
-        state_ego = egoVehicle.getState()
-        state_i = state_ego[:,0]
-        if (lane == egoVehicle.getLane()):
-                if type == "lead":
-                    if (self.p[0] < state_i[0]) and (state_i[0] < (self.p[0]+d)) and (state_i[0] < x_veh[0]):
-                        x_veh = state_i[:4]
-                        x_veh[0] -= 2*self.truck_respect_s
-                        x_veh[2] -= self.truck_respect_v
-                        u_veh = egoVehicle.getControl()
-                elif type == "trail":
-                    if (self.p[0] > state_i[0]) and (state_i[0] > (self.p[0]+d)) and (state_i[0] > x_veh[0]):
-                        x_veh = state_i[:4]
-                        x_veh[0] += self.truck_respect_s
-                        x_veh[2] += self.truck_respect_v
-                        u_veh = egoVehicle.getControl()
+        # Check ego vehicle only if interaction is enabled
+        if not self.disable_ego_interaction:
+            state_ego = egoVehicle.getState()
+            state_i = state_ego[:,0]
+            if (lane == egoVehicle.getLane()):
+                    if type == "lead":
+                        if (self.p[0] < state_i[0]) and (state_i[0] < (self.p[0]+d)) and (state_i[0] < x_veh[0]):
+                            x_veh = state_i[:4]
+                            x_veh[0] -= 2*self.truck_respect_s
+                            x_veh[2] -= self.truck_respect_v
+                            u_veh = egoVehicle.getControl()
+                    elif type == "trail":
+                        if (self.p[0] > state_i[0]) and (state_i[0] > (self.p[0]+d)) and (state_i[0] > x_veh[0]):
+                            x_veh = state_i[:4]
+                            x_veh[0] += self.truck_respect_s
+                            x_veh[2] += self.truck_respect_v
+                            u_veh = egoVehicle.getControl()
         return x_veh, u_veh
 
     def IDM(self,x_init,x_lead):
