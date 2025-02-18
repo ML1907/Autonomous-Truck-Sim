@@ -5,7 +5,42 @@ from helpers import *
 
 class makeController:
     """
-        Creates a MPC based on current vehicle, traffic and scenario
+    This class constructs a Model Predictive Control (MPC) problem for the autonomous truck
+    based on the provided vehicle model, traffic scenario, and control settings. It formulates
+    the optimization problem using CasADi's `Opti` framework and defines the objective function,
+    constraints, and solver configurations.
+
+    Attributes:
+    - vehicle: Vehicle model object containing dynamics and cost definitions.
+    - traffic: Object containing the behavior and states of surrounding vehicles.
+    - scenario: Scenario object specifying the traffic environment and constraints.
+    - N: Prediction horizon length (number of discrete steps).
+    - opts: Dictionary containing MPC options (e.g., controller version, solver type).
+    - dt: Time step for integration and prediction.
+    - opti: CasADi `Opti()` object for defining and solving the optimization problem.
+    
+    Methods:
+    - setStateEqconstraints(): Adds state equality constraints based on vehicle dynamics.
+    - setInEqConstraints(): Adds inequality constraints (e.g., input limits, road boundaries).
+    - setTrafficConstraints(): Adds scenario-specific traffic constraints (e.g., collision avoidance).
+    - setCost(): Defines the objective function for the MPC.
+    - setController(): Combines cost and constraints to finalize the MPC problem.
+    - getFunction(): Returns a callable CasADi function to solve the MPC online.
+    - testSolver(): Runs a test scenario to validate the controller setup.
+
+    Notes:
+    - The controller version (`opts['version']`) determines the scenario: trailing, left lane change, or right lane change.
+    - References for the vehicle states and controls are passed as parameters during the solve step.
+    - Traffic constraints are adjusted based on the scenario (e.g., single lead vehicle for trailing).
+    
+    Example Usage:
+    ```python
+    opts = {"version": "trailing", "solver": "ipopt", "integrator": "rk"}
+    mpc = makeController(vehicle, traffic, scenario, N=30, opts=opts, dt=0.2)
+    mpc.setController()
+    solve_fn = mpc.getFunction()
+    result = solve_fn(x0, refx, refu, lead_position)
+    ```
     """
     def __init__(self, vehicle,traffic,scenario,N,opts,dt):
         self.vehicle = vehicle

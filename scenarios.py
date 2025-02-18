@@ -6,7 +6,8 @@ from helpers import *
 
 class trailing:
     '''
-    The ego vehicle keeps lane and adapts to leading vehicle speed. Sets longitudinal mpc constraints.
+    The ego vehicle keeps lane and adapts to leading vehicle speed. Defines longitudinal safety constraint S() that will be then
+    set as mpc constraint within the makeController class.
     '''
     def __init__(self,vehicle,N,min_distx = 5, lanes = 3, laneWidth = 6.5,v_legal = 60/3.6):
         self.name = 'trailing'

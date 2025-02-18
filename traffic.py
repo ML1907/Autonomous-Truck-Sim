@@ -32,7 +32,7 @@ class combinedTraffic:
         for i in range(self.Nveh):
             self.states[:,:,i] = self.vehicles[i].prediction(self.N_pred)
 
-        # Downsample to controller frequency
+        # Downsample to controller frequency: dt_MPC = dt*MPC_freq. It aligns predictions with MPC update rate.
         self.states = self.states[:,0::self.f_c,:]
 
         return self.states
